@@ -13,6 +13,12 @@
  */
 package io.trino.plugin.example;
 
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -31,16 +37,20 @@ import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Maps.transformValues;
 import static com.google.common.collect.Maps.uniqueIndex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
+
+
 
 public class ExampleClient
 {
@@ -91,29 +101,69 @@ public class ExampleClient
             catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+            catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
         };
     }
 
     private static Map<String, Map<String, ExampleTable>> lookupSchemas(URI metadataUri, JsonCodec<Map<String, List<ExampleTable>>> catalogCodec)
-            throws IOException
+            throws IOException, ParseException
     {
         URL result = metadataUri.toURL();
-//
-////        URL url = new URL("https://dev.barb-api.co.uk/api/v1/stations");
-//        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-//
-//        conn.setRequestProperty("Authorization","Bearer yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2MzQ3NjY3LCJpYXQiOjE2NzYzMDQ0NjcsImp0aSI6ImRkYzc1MGFhY2NkOTRmOTk4NzQ5M2Q4YWJiOWQ2NDBkIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.fxXZbY2mVryyZ0TjZw4-8e6vVpJmHM0sjZJ61tXlIJI");
-//
-//        conn.setRequestProperty("Content-Type","application/json");
-//        conn.setRequestMethod("GET");
-//
-//
-//        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-//        String json = in.lines().collect(Collectors.joining());
+
+        URL url = new URL("https://dev.barb-api.co.uk/api/v1/stations");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+        conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2NDEwMDQyLCJpYXQiOjE2NzYzNjY4NDIsImp0aSI6ImU0YjI3NGQ1MWI4YzQxZjFiMTZmZmI3MmJjMmIzOTBjIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.KVfWzyYL941Ah6Z9PLPTcnVaC1VfH1OPbg4z4T3nkwY");
+
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestMethod("GET");
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+
+        System.out.println(response.toString());
 
 
+        JSONParser parser = new JSONParser();
+        //JSONObject jsonObj = (JSONObject) parser.parse(response.toString());
+        Object obj  = parser.parse(response.toString());
+        JSONArray array = (JSONArray) obj;
+        Iterator iter = array.iterator();
+        String jsonString = "";
+
+        //       while (iter.hasNext()) {
+        JSONObject json = (JSONObject) iter.next();
+        System.out.println(json);
+        Iterator<String> keys = json.keySet().iterator();
+        String record = "";
+
+
+        while (keys.hasNext()) {
+            String key = keys.next();
+            record = "";
+            record += "Key :" + key + "  Value :" + json.get(key);
+            System.out.println("Key :" + key + "  Value :" + json.get(key));
+            jsonString = "stations:[" + "{\"" + key + "\":\"" + json.get(key) + "\"}";
+            //           }
+
+        }
+        record = "[" + record + "]";
+   //     String json2 = Resources.toString(record, UTF_8);
+
+ /*       URL result = metadataUri.toURL();
         String json = Resources.toString(result, UTF_8);
-        Map<String, List<ExampleTable>> catalog = catalogCodec.fromJson(json);
+        System.out.println(json);*/
+        List<ExampleTable> stationListTable = new ArrayList<>();
+        ExampleTable stationTable = new ExampleTable("station",[],"")
+        Map<String, List<ExampleTable>> catalog = catalogCodec.fromJson(record);
 
         return ImmutableMap.copyOf(transformValues(catalog, resolveAndIndexTables(metadataUri)));
     }

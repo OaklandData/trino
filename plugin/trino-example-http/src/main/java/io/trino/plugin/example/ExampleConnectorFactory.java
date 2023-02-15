@@ -42,7 +42,7 @@ public class ExampleConnectorFactory
         requireNonNull(requiredConfig, "requiredConfig is null");
         checkSpiVersion(context, this);
 
-        requiredConfig.put("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2MzQ2NDU4LCJpYXQiOjE2NzYzMDMyNTgsImp0aSI6IjllZTQ5MTc3NWQ0ZDQxMDhiNjEwNTI3ZjhiODk0MTFhIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.12-kyQbYSL9J7RBnTRRP7ZgHe7JrrWoDT0WXyTcsRXg");
+       // requiredConfig.put("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2MzQ2NDU4LCJpYXQiOjE2NzYzMDMyNTgsImp0aSI6IjllZTQ5MTc3NWQ0ZDQxMDhiNjEwNTI3ZjhiODk0MTFhIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.12-kyQbYSL9J7RBnTRRP7ZgHe7JrrWoDT0WXyTcsRXg");
 
         // A plugin is not required to use Guice; it is just very convenient
         Bootstrap app = new Bootstrap(
@@ -50,9 +50,13 @@ public class ExampleConnectorFactory
                 new TypeDeserializerModule(context.getTypeManager()),
                 new ExampleModule());
 
+//        Map<String, String> requiredConfig2 = new HashMap<>();
+//        requiredConfig2.put("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2NDM2NzcwLCJpYXQiOjE2NzYzOTM1NzAsImp0aSI6IjYzMzMzNTRkOGQ5MzQwZTJiZDcxZDhkZTY0ZTQ2ZjhhIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.gp9u8nG8q3BgzLvNVT5M_PrU-WnR4V-QbHrsfaExpJI");
+
         Injector injector = app
                 .doNotInitializeLogging()
                 .setRequiredConfigurationProperties(requiredConfig)
+//                .setRequiredConfigurationProperties(requiredConfig2)
                 .initialize();
 
         return injector.getInstance(ExampleConnector.class);
