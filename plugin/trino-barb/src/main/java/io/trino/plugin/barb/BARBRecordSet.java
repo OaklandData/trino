@@ -19,7 +19,9 @@ import com.google.common.io.Resources;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.connector.RecordSet;
 import io.trino.spi.type.Type;
+import org.json.simple.parser.ParseException;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.List;
@@ -61,6 +63,14 @@ public class BARBRecordSet
     @Override
     public RecordCursor cursor()
     {
-        return new BARBRecordCursor(columnHandles, byteSource);
+        try {
+            return new BARBRecordCursor(columnHandles, byteSource);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

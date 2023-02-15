@@ -13,6 +13,11 @@
  */
 package io.trino.plugin.barb;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
@@ -22,8 +27,15 @@ import io.airlift.slice.Slices;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.type.Type;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -48,7 +60,7 @@ public class BARBRecordCursor
 
     private List<String> fields;
 
-    public BARBRecordCursor(List<BARBColumnHandle> columnHandles, ByteSource byteSource)
+    public BARBRecordCursor(List<BARBColumnHandle> columnHandles, ByteSource byteSource) throws IOException, ParseException
     {
         this.columnHandles = columnHandles;
 
@@ -58,13 +70,52 @@ public class BARBRecordCursor
             fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
 
-        try (CountingInputStream input = new CountingInputStream(byteSource.openStream())) {
-            lines = byteSource.asCharSource(UTF_8).readLines().iterator();
-            totalBytes = input.getCount();
+        URL url = new URL("https://dev.barb-api.co.uk/api/v1/stations");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+        conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2NTE1NDIzLCJpYXQiOjE2NzY0NzIyMjMsImp0aSI6IjQ4NTBjZjYwYThjZTRlNTliYTE0MDJiMjNiNDU3ODg4IiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.hoArvOuF928gjsd2ptX4EJtgjjD4LqmRUpKukpQq4gQ");
+
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestMethod("GET");
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
         }
-        catch (IOException e) {
-            throw new UncheckedIOException(e);
+        in.close();
+
+        // System.out.println(response.toString());
+
+
+        JSONParser parser = new JSONParser();
+        //JSONObject jsonObj = (JSONObject) parser.parse(response.toString());
+        Object obj = parser.parse(response.toString());
+        JSONArray array = (JSONArray) obj;
+        Iterator iter = array.iterator();
+
+        ArrayList al = new ArrayList();
+
+        while (iter.hasNext()) {
+            JSONObject json = (JSONObject) iter.next();
+            Iterator<String> keys = json.keySet().iterator();
+            String record = "";
+            int counter=0;
+            while (keys.hasNext()) {
+                String key = keys.next();
+                if(counter == 0)
+                    record += json.get(key) + ",";
+                else {
+                    record += json.get(key);
+                    al.add(record);
+                }
+                counter++;
+            }
         }
+        lines = al.iterator();
+        totalBytes = response.toString().length();
     }
 
     @Override

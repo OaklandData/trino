@@ -22,8 +22,10 @@ import com.google.common.io.Resources;
 import com.google.common.primitives.Ints;
 
 import io.airlift.json.JsonCodec;
+import io.trino.spi.type.BigintType;
 import io.trino.spi.type.CharType;
 import io.trino.spi.type.IntegerType;
+import io.trino.spi.type.VarcharType;
 
 
 import javax.inject.Inject;
@@ -126,8 +128,8 @@ public class BARBClient
         return table -> {
            // List<URI> sources = ImmutableList.copyOf(transform(baseUri::resolve));
             List<BARBColumn> columnList = new ArrayList<BARBColumn>();
-            columnList.add(new BARBColumn("station_code", CharType.createCharType(50)));
-            columnList.add(new BARBColumn("station_name", IntegerType.INTEGER));
+            columnList.add(new BARBColumn("station_code", VarcharType.createUnboundedVarcharType()));
+            columnList.add(new BARBColumn("station_name", BigintType.BIGINT));
             return new BARBTable("stations", columnList);
         };
     }
