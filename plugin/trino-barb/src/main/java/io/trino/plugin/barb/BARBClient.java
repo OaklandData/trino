@@ -11,16 +11,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.barb;
 
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap; //import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
+import com.google.common.primitives.Ints;
+
 import io.airlift.json.JsonCodec;
+import io.trino.spi.type.CharType;
+import io.trino.spi.type.IntegerType;
+
 
 import javax.inject.Inject;
 
@@ -28,6 +32,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,15 +45,15 @@ import static com.google.common.collect.Maps.uniqueIndex;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
-public class ExampleClient
+public class BARBClient
 {
     /**
      * SchemaName -> (TableName -> TableMetadata)
      */
-    private final Supplier<Map<String, Map<String, ExampleTable>>> schemas;
+    private final Supplier<Map<String, Map<String, BARBTable>>> schemas;
 
     @Inject
-    public ExampleClient(ExampleConfig config, JsonCodec<Map<String, List<ExampleTable>>> catalogCodec)
+    public BARBClient(BARBConfig config, JsonCodec<Map<String, List<BARBTable>>> catalogCodec)
     {
         requireNonNull(catalogCodec, "catalogCodec is null");
         schemas = Suppliers.memoize(schemasSupplier(catalogCodec, config.getMetadata()));
@@ -59,26 +66,25 @@ public class ExampleClient
 
     public Set<String> getTableNames(String schema)
     {
-        requireNonNull(schema, "schema is null");
-        Map<String, ExampleTable> tables = schemas.get().get(schema);
+        Map<String, BARBTable> tables = schemas.get().get(schema);
         if (tables == null) {
             return ImmutableSet.of();
         }
         return tables.keySet();
     }
 
-    public ExampleTable getTable(String schema, String tableName)
+    public BARBTable getTable(String schema, String tableName)
     {
         requireNonNull(schema, "schema is null");
         requireNonNull(tableName, "tableName is null");
-        Map<String, ExampleTable> tables = schemas.get().get(schema);
+        Map<String, BARBTable> tables = schemas.get().get(schema);
         if (tables == null) {
             return null;
         }
         return tables.get(tableName);
     }
 
-    private static Supplier<Map<String, Map<String, ExampleTable>>> schemasSupplier(JsonCodec<Map<String, List<ExampleTable>>> catalogCodec, URI metadataUri)
+    private static Supplier<Map<String, Map<String, BARBTable>>> schemasSupplier(JsonCodec<Map<String, List<BARBTable>>> catalogCodec, URI metadataUri)
     {
         return () -> {
             try {
@@ -90,29 +96,39 @@ public class ExampleClient
         };
     }
 
-    private static Map<String, Map<String, ExampleTable>> lookupSchemas(URI metadataUri, JsonCodec<Map<String, List<ExampleTable>>> catalogCodec)
+    private static Map<String, Map<String, BARBTable>> lookupSchemas(URI metadataUri, JsonCodec<Map<String, List<BARBTable>>> catalogCodec)
             throws IOException
     {
         URL result = metadataUri.toURL();
-        String json = Resources.toString(result, UTF_8);
-        Map<String, List<ExampleTable>> catalog = catalogCodec.fromJson(json);
+        //String json = Resources.toString(result, UTF_8);
+        List<BARBColumn> columnList = new ArrayList<BARBColumn>();
+        columnList.add(new BARBColumn("station_code", CharType.createCharType(50)));
+        columnList.add(new BARBColumn("station_name", IntegerType.INTEGER));
+
+        List<BARBTable> tableList = new ArrayList<BARBTable>();
+        tableList.add(new BARBTable("stations", columnList));
+        Map<String, List<BARBTable>> catalog = new HashMap<>();
+        catalog.put("barbschema", tableList);
 
         return ImmutableMap.copyOf(transformValues(catalog, resolveAndIndexTables(metadataUri)));
     }
 
-    private static Function<List<ExampleTable>, Map<String, ExampleTable>> resolveAndIndexTables(URI metadataUri)
+    private static Function<List<BARBTable>, Map<String, BARBTable>> resolveAndIndexTables(URI metadataUri)
     {
         return tables -> {
-            Iterable<ExampleTable> resolvedTables = transform(tables, tableUriResolver(metadataUri));
-            return ImmutableMap.copyOf(uniqueIndex(resolvedTables, ExampleTable::getName));
+            Iterable<BARBTable> resolvedTables = transform(tables, tableUriResolver(metadataUri));
+            return ImmutableMap.copyOf(uniqueIndex(resolvedTables, BARBTable::getName));
         };
     }
 
-    private static Function<ExampleTable, ExampleTable> tableUriResolver(URI baseUri)
+    private static Function<BARBTable, BARBTable> tableUriResolver(URI baseUri)
     {
         return table -> {
-            List<URI> sources = ImmutableList.copyOf(transform(table.getSources(), baseUri::resolve));
-            return new ExampleTable(table.getName(), table.getColumns(), sources);
+           // List<URI> sources = ImmutableList.copyOf(transform(baseUri::resolve));
+            List<BARBColumn> columnList = new ArrayList<BARBColumn>();
+            columnList.add(new BARBColumn("station_code", CharType.createCharType(50)));
+            columnList.add(new BARBColumn("station_name", IntegerType.INTEGER));
+            return new BARBTable("stations", columnList);
         };
     }
 }
