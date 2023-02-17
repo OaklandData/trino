@@ -13,27 +13,22 @@
  */
 package io.trino.plugin.barb;
 
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
+import com.google.common.io.ByteSource;
+import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
+import io.trino.spi.connector.RecordCursor;
+import io.trino.spi.type.Type;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.io.ByteSource;
-import com.google.common.io.CountingInputStream;
-import io.airlift.slice.Slice;
-import io.airlift.slice.Slices;
-import io.trino.spi.connector.RecordCursor;
-import io.trino.spi.type.Type;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -45,7 +40,6 @@ import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.BooleanType.BOOLEAN;
 import static io.trino.spi.type.DoubleType.DOUBLE;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class BARBRecordCursor
         implements RecordCursor
@@ -80,7 +74,7 @@ public class BARBRecordCursor
 
         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String inputLine;
-        StringBuffer response = new StringBuffer();
+        StringBuilder response = new StringBuilder();
 
         while ((inputLine = in.readLine()) != null) {
             response.append(inputLine);
@@ -88,7 +82,6 @@ public class BARBRecordCursor
         in.close();
 
         // System.out.println(response.toString());
-
 
         JSONParser parser = new JSONParser();
         //JSONObject jsonObj = (JSONObject) parser.parse(response.toString());
@@ -102,11 +95,12 @@ public class BARBRecordCursor
             JSONObject json = (JSONObject) iter.next();
             Iterator<String> keys = json.keySet().iterator();
             String record = "";
-            int counter=0;
+            int counter = 0;
             while (keys.hasNext()) {
                 String key = keys.next();
-                if(counter == 0)
+                if (counter == 0) {
                     record += json.get(key) + ",";
+                }
                 else {
                     record += json.get(key);
                     al.add(record);
