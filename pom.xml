@@ -130,6 +130,7 @@
         <module>plugin/trino-accumulo</module>
         <module>plugin/trino-accumulo-iterators</module>
         <module>plugin/trino-atop</module>
+        <module>plugin/trino-audience</module>
         <module>plugin/trino-barb</module>
         <module>plugin/trino-base-jdbc</module>
         <module>plugin/trino-bigquery</module>
@@ -205,6 +206,13 @@
             <dependency>
                 <groupId>io.trino</groupId>
                 <artifactId>trino-array</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.trino</groupId>
+                <artifactId>trino-audience</artifactId>
+                <type>zip</type>
                 <version>${project.version}</version>
             </dependency>
 

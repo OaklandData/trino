@@ -104,8 +104,8 @@ public class BARBClient
         URL result = metadataUri.toURL();
         //String json = Resources.toString(result, UTF_8);
         List<BARBColumn> columnList = new ArrayList<BARBColumn>();
-        columnList.add(new BARBColumn("station_code", CharType.createCharType(50)));
-        columnList.add(new BARBColumn("station_name", IntegerType.INTEGER));
+        columnList.add(new BARBColumn("station_name", VarcharType.createUnboundedVarcharType()));
+        columnList.add(new BARBColumn("station_code", VarcharType.createUnboundedVarcharType()));
 
         List<BARBTable> tableList = new ArrayList<BARBTable>();
         tableList.add(new BARBTable("stations", columnList));
@@ -128,8 +128,8 @@ public class BARBClient
         return table -> {
            // List<URI> sources = ImmutableList.copyOf(transform(baseUri::resolve));
             List<BARBColumn> columnList = new ArrayList<BARBColumn>();
+            columnList.add(new BARBColumn("station_name", VarcharType.createUnboundedVarcharType()));
             columnList.add(new BARBColumn("station_code", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new BARBColumn("station_name", BigintType.BIGINT));
             return new BARBTable("stations", columnList);
         };
     }

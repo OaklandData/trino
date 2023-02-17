@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.trino.plugin.example;
+package io.trino.plugin.audience;
 
 import com.google.inject.Injector;
 import io.airlift.bootstrap.Bootstrap;
@@ -26,13 +26,13 @@ import java.util.Map;
 import static io.trino.plugin.base.Versions.checkSpiVersion;
 import static java.util.Objects.requireNonNull;
 
-public class ExampleConnectorFactory
+public class AudienceConnectorFactory
         implements ConnectorFactory
 {
     @Override
     public String getName()
     {
-        return "example-http";
+        return "audience";
     }
 
     @Override
@@ -41,19 +41,17 @@ public class ExampleConnectorFactory
         requireNonNull(requiredConfig, "requiredConfig is null");
         checkSpiVersion(context, this);
 
-       // requiredConfig.put("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2MzQ2NDU4LCJpYXQiOjE2NzYzMDMyNTgsImp0aSI6IjllZTQ5MTc3NWQ0ZDQxMDhiNjEwNTI3ZjhiODk0MTFhIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.12-kyQbYSL9J7RBnTRRP7ZgHe7JrrWoDT0WXyTcsRXg");
-
         // A plugin is not required to use Guice; it is just very convenient
         Bootstrap app = new Bootstrap(
                 new JsonModule(),
                 new TypeDeserializerModule(context.getTypeManager()),
-                new ExampleModule());
+                new AudienceModule());
 
         Injector injector = app
                 .doNotInitializeLogging()
                 .setRequiredConfigurationProperties(requiredConfig)
                 .initialize();
 
-        return injector.getInstance(ExampleConnector.class);
+        return injector.getInstance(AudienceConnector.class);
     }
 }
