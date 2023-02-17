@@ -13,6 +13,9 @@
  */
 package io.trino.plugin.barb;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -36,8 +39,12 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeMap;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -51,6 +58,10 @@ public class BARBRecordCursor
         implements RecordCursor
 {
     private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
+
+    public static HashMap<String, ArrayList<String>> strings = new LinkedHashMap<String, ArrayList<String>>();
+    public static TreeMap<String, ArrayList<String>> treeMap= new TreeMap<>();
+
 
     private final List<BARBColumnHandle> columnHandles;
     private final int[] fieldToColumnIndex;
@@ -73,7 +84,7 @@ public class BARBRecordCursor
         URL url = new URL("https://dev.barb-api.co.uk/api/v1/stations");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-        conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2NTE1NDIzLCJpYXQiOjE2NzY0NzIyMjMsImp0aSI6IjQ4NTBjZjYwYThjZTRlNTliYTE0MDJiMjNiNDU3ODg4IiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.hoArvOuF928gjsd2ptX4EJtgjjD4LqmRUpKukpQq4gQ");
+        conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2Njg3NDg1LCJpYXQiOjE2NzY2NDQyODUsImp0aSI6IjA4NGQ2NmNmYTlmMzQwZWJiMGRjMDllNWMyYjBlNWEwIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.mGNlBJKn1ncyaokEKmR2dgbqrIAtjps_IBtmRTUKgSk");
 
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setRequestMethod("GET");
@@ -87,35 +98,52 @@ public class BARBRecordCursor
         }
         in.close();
 
-        // System.out.println(response.toString());
-
-
         JSONParser parser = new JSONParser();
-        //JSONObject jsonObj = (JSONObject) parser.parse(response.toString());
         Object obj = parser.parse(response.toString());
-        JSONArray array = (JSONArray) obj;
-        Iterator iter = array.iterator();
-
+        //JSONObject jsonObject = (JSONObject) obj;
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(response.toString());
+        printRec(jsonNode, "");
+        treeMap.putAll(strings);
+        Set<String> setOfKeySet = treeMap.keySet();
         ArrayList al = new ArrayList();
-
-        while (iter.hasNext()) {
-            JSONObject json = (JSONObject) iter.next();
-            Iterator<String> keys = json.keySet().iterator();
+        for (int i = 0; i < treeMap.get("station_code").size(); i++) {
             String record = "";
-            int counter=0;
-            while (keys.hasNext()) {
-                String key = keys.next();
-                if(counter == 0)
-                    record += json.get(key) + ",";
-                else {
-                    record += json.get(key);
-                    al.add(record);
-                }
-                counter++;
+            for (String key : setOfKeySet) {
+                record += treeMap.get(key).get(i) + ",";
             }
+            record = record.substring(0, record.length() - 1);
+            al.add(record);
         }
+
         lines = al.iterator();
         totalBytes = response.toString().length();
+    }
+
+    private static void printRec(JsonNode jsonNode, String key)
+    {
+        if (jsonNode.isValueNode()) {
+            add(key, jsonNode.toString());
+        }
+        else if (jsonNode.isObject()) {
+            jsonNode.fields().forEachRemaining(field -> printRec(field.getValue(), field.getKey()));
+        }
+        else if (jsonNode.isArray()) {
+            for (int i = 0; i < jsonNode.size(); i++) {
+                printRec(jsonNode.get(i), key + i);
+            }
+        }
+    }
+
+    private static void add(String key, String value)
+    {
+        ArrayList<String> values = strings.get(key);
+        if (values == null) {
+            values = new ArrayList<String>();
+            strings.put(key, values);
+        }
+
+        values.add(value);
     }
 
     @Override
