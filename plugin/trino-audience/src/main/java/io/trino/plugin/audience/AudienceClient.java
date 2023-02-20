@@ -20,11 +20,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.airlift.json.JsonCodec;
 import io.trino.spi.type.VarcharType;
+import org.json.simple.parser.ParseException;
 
 import javax.inject.Inject;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Maps.transformValues;
@@ -84,40 +87,36 @@ public class AudienceClient
                 return lookupSchemas(metadataUri, catalogCodec);
             }
             catch (IOException e) {
-                throw new UncheckedIOException(e);
+                throw new RuntimeException(e);
+            }
+            catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            catch (ParseException e) {
+                throw new RuntimeException(e);
             }
         };
     }
 
     private static Map<String, Map<String, AudienceTable>> lookupSchemas(URI metadataUri, JsonCodec<Map<String, List<AudienceTable>>> catalogCodec)
-            throws IOException
+            throws IOException, ParseException, InterruptedException
     {
         URL result = metadataUri.toURL();
         //String json = Resources.toString(result, UTF_8);
+        ColumnTreeMap columnTreeMap = new ColumnTreeMap(result.toString());
+        TreeMap<String, ArrayList<String>> treeMap = new TreeMap<>();
+        treeMap = columnTreeMap.getColumnTreeMap();
+        Set<String> setOfKeySet = treeMap.keySet();
+
         List<AudienceColumn> columnList = new ArrayList<AudienceColumn>();
-        columnList.add(new AudienceColumn("activity", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("audience_code", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("audience_size_hundreds", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("barb_polling_datetime", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("barb_reporting_datetime", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("date_of_transmission", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("is_macro_region", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("panel_code", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("panel_region", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("platforms0", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("platforms1", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("platforms2", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("platforms3", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("platforms4", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("platforms5", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("platforms6", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("standard_datetime", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("station_code", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("station_name", VarcharType.createUnboundedVarcharType()));
-        columnList.add(new AudienceColumn("transmission_time_period_duration_mins", VarcharType.createUnboundedVarcharType()));
+        for (String key : setOfKeySet) {
+            columnList.add(new AudienceColumn(key, VarcharType.createUnboundedVarcharType()));
+        }
+
+        String tableName = columnTreeMap.getTableName();
 
         List<AudienceTable> tableList = new ArrayList<AudienceTable>();
-        tableList.add(new AudienceTable("audiences", columnList));
+        tableList.add(new AudienceTable(tableName, columnList));
         Map<String, List<AudienceTable>> catalog = new HashMap<>();
         catalog.put("audienceschema", tableList);
         return ImmutableMap.copyOf(transformValues(catalog, resolveAndIndexTables(metadataUri)));
@@ -135,29 +134,37 @@ public class AudienceClient
     {
         return table -> {
            // List<URI> sources = ImmutableList.copyOf(transform(table.getSources(), baseUri::resolve));
-            List<AudienceColumn> columnList = new ArrayList<AudienceColumn>();
-            columnList.add(new AudienceColumn("activity", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("audience_code", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("audience_size_hundreds", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("barb_polling_datetime", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("barb_reporting_datetime", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("date_of_transmission", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("is_macro_region", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("panel_code", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("panel_region", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("platforms0", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("platforms1", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("platforms2", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("platforms3", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("platforms4", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("platforms5", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("platforms6", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("standard_datetime", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("station_code", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("station_name", VarcharType.createUnboundedVarcharType()));
-            columnList.add(new AudienceColumn("transmission_time_period_duration_mins", VarcharType.createUnboundedVarcharType()));
+            URL result = null;
+            try {
+                result = baseUri.toURL();
+            }
+            catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+            //String json = Resources.toString(result, UTF_8);
+            ColumnTreeMap columnTreeMap = new ColumnTreeMap(result.toString());
+            TreeMap<String, ArrayList<String>> treeMap = new TreeMap<>();
+            try {
+                treeMap = columnTreeMap.getColumnTreeMap();
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+            Set<String> setOfKeySet = treeMap.keySet();
 
-            return new AudienceTable("audiences", columnList);
+            List<AudienceColumn> columnList = new ArrayList<AudienceColumn>();
+            for (String key : setOfKeySet) {
+                columnList.add(new AudienceColumn(key, VarcharType.createUnboundedVarcharType()));
+            }
+
+            String tableName = columnTreeMap.getTableName();
+            return new AudienceTable(tableName, columnList);
         };
     }
 }

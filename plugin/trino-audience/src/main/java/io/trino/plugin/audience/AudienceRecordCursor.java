@@ -14,7 +14,6 @@
 package io.trino.plugin.audience;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
@@ -22,20 +21,10 @@ import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.type.Type;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -80,35 +69,12 @@ public class AudienceRecordCursor
             fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
 
-        String tokenResponse = BearerTokenGen.getBearerToken();
-
-        URL url = new URL("https://dev.barb-api.co.uk/api/v1/audiences_by_time?min_transmission_date=2023-01-01&max_transmission_date=2023-12-31&time_period_length=15&viewing_status=live");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
-        conn.setRequestProperty("Authorization", "Bearer " + tokenResponse);
-
-        conn.setRequestProperty("Content-Type", "application/json");
-        conn.setRequestMethod("GET");
-
-        BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
-
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        in.close();
-
-        JSONParser parser = new JSONParser();
-        Object obj = parser.parse(response.toString());
-        JSONObject jsonObject = (JSONObject) obj;
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readTree(response.toString());
-        printRec(jsonNode, "");
-        treeMap.putAll(strings);
+        ColumnTreeMap columnTreeMap = new ColumnTreeMap("https://dev.barb-api.co.uk/api/v1/audiences_by_time?min_transmission_date=2023-01-01&max_transmission_date=2023-12-31&time_period_length=15&viewing_status=live");
+        treeMap = columnTreeMap.getColumnTreeMap();
         Set<String> setOfKeySet = treeMap.keySet();
+        String fieldForColumnCount = setOfKeySet.iterator().next().toString();
         ArrayList al = new ArrayList();
-        for (int i = 0; i < treeMap.get("date_of_transmission").size(); i++) {
+        for (int i = 0; i < treeMap.get(fieldForColumnCount).size(); i++) {
             String record = "";
             for (String key : setOfKeySet) {
                 record += treeMap.get(key).get(i) + ",";
@@ -118,7 +84,7 @@ public class AudienceRecordCursor
         }
 
         lines = al.iterator();
-        totalBytes = response.toString().length();
+        totalBytes = treeMap.toString().length();
 
     }
 
