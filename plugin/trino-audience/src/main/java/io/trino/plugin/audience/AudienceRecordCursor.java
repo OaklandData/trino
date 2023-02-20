@@ -27,10 +27,16 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -60,9 +66,11 @@ public class AudienceRecordCursor
     private final long totalBytes;
 
     private List<String> fields;
+    private static HttpClient client =
+            HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(100)).build();
 
     @SuppressWarnings("checkstyle:RegexpMultiline")
-    public AudienceRecordCursor(List<AudienceColumnHandle> columnHandles, ByteSource byteSource) throws IOException, ParseException
+    public AudienceRecordCursor(List<AudienceColumnHandle> columnHandles, ByteSource byteSource) throws IOException, ParseException, InterruptedException
     {
         this.columnHandles = columnHandles;
 
@@ -72,10 +80,12 @@ public class AudienceRecordCursor
             fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
 
+        String tokenResponse = BearerTokenGen.getBearerToken();
+
         URL url = new URL("https://dev.barb-api.co.uk/api/v1/audiences_by_time?min_transmission_date=2023-01-01&max_transmission_date=2023-12-31&time_period_length=15&viewing_status=live");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-        conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2NjgxNDU5LCJpYXQiOjE2NzY2MzgyNTksImp0aSI6ImRmYzdlNTJmMDU1ZTRkMDA4NWIwNTVmYjdjMzEyZDVkIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.OLhR1qvR5rc3KdDx9KAXYVkIWY_foUdmGa5_zPTedeQ");
+        conn.setRequestProperty("Authorization", "Bearer " + tokenResponse);
 
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setRequestMethod("GET");

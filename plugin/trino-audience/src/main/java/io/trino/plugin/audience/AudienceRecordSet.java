@@ -66,10 +66,7 @@ public class AudienceRecordSet
         try {
             return new AudienceRecordCursor(columnHandles, byteSource);
         }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        catch (ParseException e) {
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
