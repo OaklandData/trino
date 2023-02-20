@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import io.trino.spi.connector.ColumnMetadata;
 
-import java.net.URI;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;

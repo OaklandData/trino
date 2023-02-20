@@ -16,17 +16,10 @@ package io.trino.plugin.barb;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableMap; //import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Resources;
-import com.google.common.primitives.Ints;
-
 import io.airlift.json.JsonCodec;
-import io.trino.spi.type.BigintType;
-import io.trino.spi.type.CharType;
-import io.trino.spi.type.IntegerType;
 import io.trino.spi.type.VarcharType;
-
 
 import javax.inject.Inject;
 
@@ -35,7 +28,6 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +36,6 @@ import java.util.Set;
 import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Maps.transformValues;
 import static com.google.common.collect.Maps.uniqueIndex;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
 public class BARBClient

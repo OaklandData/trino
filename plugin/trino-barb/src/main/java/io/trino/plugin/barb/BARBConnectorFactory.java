@@ -21,7 +21,6 @@ import io.trino.spi.connector.Connector;
 import io.trino.spi.connector.ConnectorContext;
 import io.trino.spi.connector.ConnectorFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import static io.trino.plugin.base.Versions.checkSpiVersion;

@@ -15,10 +15,6 @@ package io.trino.plugin.audience;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
@@ -26,6 +22,9 @@ import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.type.Type;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -52,7 +51,7 @@ public class AudienceRecordCursor
 {
     private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
     public static HashMap<String, ArrayList<String>> strings = new LinkedHashMap<String, ArrayList<String>>();
-    public static TreeMap<String, ArrayList<String>> treeMap= new TreeMap<>();
+    public static TreeMap<String, ArrayList<String>> treeMap = new TreeMap<>();
 
     private final List<AudienceColumnHandle> columnHandles;
     private final int[] fieldToColumnIndex;
@@ -83,7 +82,7 @@ public class AudienceRecordCursor
 
         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String inputLine;
-        StringBuffer response = new StringBuffer();
+        StringBuilder response = new StringBuilder();
 
         while ((inputLine = in.readLine()) != null) {
             response.append(inputLine);

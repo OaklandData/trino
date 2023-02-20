@@ -15,28 +15,21 @@ package io.trino.plugin.barb;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
-import com.google.common.io.CountingInputStream;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.type.Type;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,7 +45,6 @@ import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.BooleanType.BOOLEAN;
 import static io.trino.spi.type.DoubleType.DOUBLE;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class BARBRecordCursor
         implements RecordCursor
@@ -84,14 +76,14 @@ public class BARBRecordCursor
         URL url = new URL("https://dev.barb-api.co.uk/api/v1/stations");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-        conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2Njg3NDg1LCJpYXQiOjE2NzY2NDQyODUsImp0aSI6IjA4NGQ2NmNmYTlmMzQwZWJiMGRjMDllNWMyYjBlNWEwIiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.mGNlBJKn1ncyaokEKmR2dgbqrIAtjps_IBtmRTUKgSk");
+        conn.setRequestProperty("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc2OTM2NTkyLCJpYXQiOjE2NzY4OTMzOTIsImp0aSI6IjVhMDU5OTc3ODIzZDRhNTI4N2NjZjY1ZGE4NjcxM2Q0IiwidXNlcl9pZCI6IjljMTAzNmI2LTM1NTAtNDhhYS05YjkzLTBjNjU1NGVmMjcwZCJ9.qzGUeGP4UQn2Dy6u1nqb7dLVjPerd4XighLPSPNR0xk");
 
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setRequestMethod("GET");
 
         BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         String inputLine;
-        StringBuffer response = new StringBuffer();
+        StringBuilder response = new StringBuilder();
 
         while ((inputLine = in.readLine()) != null) {
             response.append(inputLine);
