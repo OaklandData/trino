@@ -25,7 +25,6 @@ import org.json.simple.parser.ParseException;
 import javax.inject.Inject;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;

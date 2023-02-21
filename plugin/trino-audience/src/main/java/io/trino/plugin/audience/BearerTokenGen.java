@@ -24,7 +24,7 @@ public class BearerTokenGen
 
     public static String getBearerToken() throws IOException, InterruptedException
     {
-        StringBuffer fileData = new StringBuffer();
+        /*StringBuffer fileData = new StringBuffer();
         BufferedReader reader = new BufferedReader(new FileReader("/Users/Admin1/IdeaProjects/trino_bkp11feb/plugin/trino-audience/src/main/resources/file.json"));
         char[] buf = new char[1024];
         int numRead=0;
@@ -32,7 +32,11 @@ public class BearerTokenGen
             String readData = String.valueOf(buf, 0, numRead);
             fileData.append(readData);
         }
-        reader.close();
+        reader.close();*/
+
+        StringBuffer fileData = new StringBuffer();
+        String readData = new String("{\"email\":\"testuser@demo.com\", \"password\":\"G9HwTMheuvCSXwC\"}");
+        fileData.append(readData);
 
 
         java.net.http.HttpRequest tokenRequest = java.net.http.HttpRequest.newBuilder()
